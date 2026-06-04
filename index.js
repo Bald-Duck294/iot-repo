@@ -30,18 +30,29 @@ app.use(express.json());
 // ==========================================
 app.post("/api/odor", async (req, res) => {
   try {
-    const { device_id, nh3_value, status, fan_status } = req.body;
+    // 1. Added air_status and wifi_rssi to the destructured body
+    const { device_id, nh3_value, status, fan_status, air_status, wifi_rssi } =
+      req.body;
 
     // Log the incoming data for debugging
     console.log("📥 New IoT Data Received:", req.body);
 
-    // Save the data using parameterized SQL queries to prevent SQL injection
+    // 2. Updated the query to include the two new columns and $5, $6 parameters
     const query = `
-      INSERT INTO odor_readings (device_id, nh3_value, status, fan_status)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO odor_readings (device_id, nh3_value, status, fan_status, air_status, wifi_rssi)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *;
     `;
-    const values = [device_id, nh3_value, status, fan_status];
+
+    // 3. Added the two new variables to the values array
+    const values = [
+      device_id,
+      nh3_value,
+      status,
+      fan_status,
+      air_status,
+      wifi_rssi,
+    ];
 
     const result = await pool.query(query, values);
 
