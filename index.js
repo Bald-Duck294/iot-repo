@@ -32,6 +32,9 @@ app.use(express.json());
 // ==========================================
 // GET: Web Dashboard (UI)
 // ==========================================
+// ==========================================
+// GET: Web Dashboard (UI)
+// ==========================================
 app.get("/", async (req, res) => {
   try {
     // Fetch latest 100 readings
@@ -52,81 +55,104 @@ app.get("/", async (req, res) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Railway NH3 Monitor</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+            ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        </style>
     </head>
-    <body class="bg-gray-50 text-gray-800 font-sans p-4 md:p-10">
+    <body class="bg-slate-100 text-slate-800 font-sans p-4 md:p-8 min-h-screen">
         
-        <div class="max-w-6xl mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">🚉 Railway NH3 Monitoring</h1>
-                <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-slate-900 flex items-center gap-2">
+                        🚉 NH3 Monitoring
+                    </h1>
+                    <p class="text-slate-500 text-sm mt-1">Live odor detection & automated exhaust system</p>
+                </div>
+                <span class="bg-blue-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-sm">
                     Latest 100 Records
                 </span>
             </div>
 
-            <div class="bg-white shadow-md rounded-lg overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID & Time</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NH3 Value</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Air Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fan Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wi-Fi RSSI</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
     `;
 
-    // Loop through the data and generate table rows
+    // Loop through the data and generate UI Cards
     readings.forEach((row) => {
-      // Format the date to be human-readable
-      const date = new Date(row.created_at).toLocaleString();
+      // Format the date to Indian Standard Time (IST)
+      const date = new Date(row.created_at).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
 
-      // Handle null values for older records
+      // Handle null values
       const airStatus = row.air_status || "N/A";
       const wifiRssi = row.wifi_rssi ? `${row.wifi_rssi} dBm` : "N/A";
 
-      // Color coding logic for Air Status
-      let airStatusColor = "bg-gray-100 text-gray-800";
+      // Color coding logic for Air Status Badge
+      let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
       if (airStatus === "EXCELLENT")
-        airStatusColor = "bg-green-100 text-green-800";
+        badgeClass = "bg-green-50 text-green-700 border-green-200";
       if (airStatus === "MODERATE")
-        airStatusColor = "bg-yellow-100 text-yellow-800";
+        badgeClass = "bg-yellow-50 text-yellow-700 border-yellow-200";
       if (airStatus === "POOR")
-        airStatusColor = "bg-orange-100 text-orange-800";
-      if (airStatus === "CRITICAL") airStatusColor = "bg-red-100 text-red-800";
+        badgeClass = "bg-orange-50 text-orange-700 border-orange-200";
+      if (airStatus === "CRITICAL")
+        badgeClass = "bg-red-50 text-red-700 border-red-200 animate-pulse";
 
       // Color coding for Fan Status
-      const fanColor =
-        row.fan_status === "ON" ? "text-green-600 font-bold" : "text-gray-500";
+      const fanIsOn = row.fan_status === "ON";
+      const fanColor = fanIsOn ? "text-blue-600" : "text-slate-400";
+      const fanIconColor = fanIsOn
+        ? "text-blue-500 animate-spin"
+        : "text-slate-300";
 
       html += `
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">#${row.id}</div>
-                                <div class="text-xs text-gray-500">${date}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-lg font-semibold text-gray-900">${row.nh3_value}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${airStatusColor}">
-                                    ${airStatus}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm ${fanColor}">
-                                ${row.fan_status || "N/A"}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                ${wifiRssi}
-                            </td>
-                        </tr>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+                    
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <div class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">ID #${row.id}</div>
+                            <div class="text-xs font-medium text-slate-500 mt-0.5">${date}</div>
+                        </div>
+                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-full border ${badgeClass}">
+                            ${airStatus}
+                        </span>
+                    </div>
+
+                    <div class="mb-5 flex items-end gap-1">
+                        <span class="text-4xl font-black text-slate-800 leading-none">${row.nh3_value}</span>
+                        <span class="text-xs font-bold text-slate-400 mb-1">ppm</span>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4 ${fanIconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0 0v-9m0 0a3 3 0 110-6 3 3 0 010 6z"></path>
+                            </svg>
+                            <span class="text-[11px] font-bold ${fanColor}">FAN ${row.fan_status || "N/A"}</span>
+                        </div>
+                        
+                        <div class="flex items-center gap-1.5" title="Wi-Fi Signal Strength">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                            </svg>
+                            <span class="text-[11px] font-medium text-slate-500">${wifiRssi}</span>
+                        </div>
+                    </div>
+
+                </div>
       `;
     });
 
     html += `
-                    </tbody>
-                </table>
             </div>
         </div>
     </body>
