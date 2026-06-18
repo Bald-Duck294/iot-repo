@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Safai Executive Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+
+      .glass-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+      }
+      .kpi-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+      .live-dot {
+        height: 10px;
+        width: 10px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .live-dot.animate {
+        animation: pulse-green 2s infinite;
+      }
+
+      @keyframes pulse-green {
+        0% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        }
+        70% {
+          transform: scale(1);
+          box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+        }
+        100% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+      }
+
+      /* Table Status Colors */
+      .status-excellent {
+        background-color: #f0fdf4;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+      }
+      .status-average {
+        background-color: #fefce8;
+        color: #854d0e;
+        border: 1px solid #fef08a;
+      }
+      .status-mediocre {
+        background-color: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+      }
+      .status-unusable {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col overflow-hidden">
+    <header
+      class="bg-white border-b border-slate-200 h-[70px] flex items-center justify-between px-6 shrink-0 z-10 shadow-sm"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-md"
+        >
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div>
+          <h1
+            class="font-black text-slate-800 text-xl tracking-tight leading-none"
+          >
+            Odor Intelligence
+          </h1>
+          <p
+            class="text-[11px] text-slate-500 font-semibold uppercase tracking-widest mt-0.5"
+          >
+            Device: RAILWAY_DEVICE_001
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div
+          class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex text-xs font-bold text-slate-500"
+        >
+          <button
+            onclick="changeInterval('minute', this)"
+            class="interval-btn px-4 py-2 hover:bg-white hover:text-slate-800 rounded-lg transition-all"
+          >
+            24 Hours
+          </button>
+          <button
+            onclick="changeInterval('hour', this)"
+            class="interval-btn active px-4 py-2 bg-white shadow-sm text-blue-600 rounded-lg transition-all"
+          >
+            7 Days
+          </button>
+          <button
+            onclick="changeInterval('day', this)"
+            class="interval-btn px-4 py-2 hover:bg-white hover:text-slate-800 rounded-lg transition-all"
+          >
+            30 Days
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+      <div class="max-w-[1400px] mx-auto space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div class="glass-card p-6 border-l-4 border-l-green-500 relative">
+            <div
+              class="absolute top-6 right-6 flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold border border-green-200"
+            >
+              <span class="live-dot animate"></span> LIVE
+            </div>
+            <p class="kpi-title">Current NH3 Level</p>
+            <div class="flex items-end gap-2 mt-2">
+              <span
+                class="text-5xl font-black text-slate-800 tracking-tighter"
+                id="kpi-current"
+                >--</span
+              >
+              <span class="text-sm font-bold text-slate-400 mb-1.5">ppm</span>
+            </div>
+            <p
+              class="text-[11px] font-semibold text-slate-500 mt-3"
+              id="kpi-time"
+            >
+              Last update: --
+            </p>
+          </div>
+
+          <div class="glass-card p-6 border-l-4 border-l-red-500">
+            <div class="absolute top-6 right-6 text-red-400">
+              <i class="fa-solid fa-arrow-trend-up text-xl"></i>
+            </div>
+            <p class="kpi-title">Peak Today</p>
+            <div class="flex items-end gap-2 mt-2">
+              <span
+                class="text-5xl font-black text-red-600 tracking-tighter"
+                id="kpi-peak"
+                >--</span
+              >
+              <span class="text-sm font-bold text-red-400 mb-1.5">ppm</span>
+            </div>
+            <p class="text-[11px] font-semibold text-slate-500 mt-3">
+              Highest concentration recorded
+            </p>
+          </div>
+
+          <div class="glass-card p-6 border-l-4 border-l-blue-500">
+            <div class="absolute top-6 right-6 text-blue-400">
+              <i class="fa-solid fa-scale-balanced text-xl"></i>
+            </div>
+            <p class="kpi-title">Daily Average</p>
+            <div class="flex items-end gap-2 mt-2">
+              <span
+                class="text-5xl font-black text-slate-800 tracking-tighter"
+                id="kpi-avg"
+                >--</span
+              >
+              <span class="text-sm font-bold text-slate-400 mb-1.5">ppm</span>
+            </div>
+            <p class="text-[11px] font-semibold text-slate-500 mt-3">
+              Overall washroom health
+            </p>
+          </div>
+
+          <div class="glass-card p-6 border-l-4 border-l-orange-500">
+            <div class="absolute top-6 right-6 text-orange-400">
+              <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+            </div>
+            <p class="kpi-title">Critical Incidents (>60ppm)</p>
+            <div class="flex items-end gap-2 mt-2">
+              <span
+                class="text-5xl font-black text-orange-600 tracking-tighter"
+                id="kpi-incidents"
+                >--</span
+              >
+              <span class="text-sm font-bold text-orange-400 mb-1.5"
+                >times</span
+              >
+            </div>
+            <p class="text-[11px] font-semibold text-slate-500 mt-3">
+              Washroom became unusable
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 glass-card p-6">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <h2 class="text-lg font-bold text-slate-800">
+                  Odor Timeline & Cleaning Correlation
+                </h2>
+                <p class="text-xs text-slate-500 mt-1">
+                  Shows peak NH3 levels.
+                  <span class="text-blue-600 font-bold">Blue markers</span>
+                  indicate when staff completed a cleaning task.
+                </p>
+              </div>
+            </div>
+            <div id="timelineChart" class="w-full h-[320px]"></div>
+          </div>
+
+          <div class="lg:col-span-1 glass-card p-6">
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">
+                Average Odor by Hour
+              </h2>
+              <p class="text-xs text-slate-500 mt-1">
+                Identify peak traffic times (24h clock).
+              </p>
+            </div>
+            <div id="hourlyChart" class="w-full h-[320px]"></div>
+          </div>
+        </div>
+
+        <div class="glass-card overflow-hidden flex flex-col h-[500px]">
+          <div
+            class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0"
+          >
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">
+                Live Telemetry Log
+              </h2>
+              <p class="text-xs text-slate-500 mt-1">
+                Latest 100 records directly from the IoT sensor.
+              </p>
+            </div>
+            <div
+              class="flex gap-4 text-[10px] font-bold uppercase tracking-wider"
+            >
+              <span class="flex items-center gap-1.5"
+                ><div class="w-3 h-3 rounded-full bg-green-500"></div>
+                Excellent</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                Average</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><div class="w-3 h-3 rounded-full bg-orange-500"></div>
+                Mediocre</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><div class="w-3 h-3 rounded-full bg-red-600"></div>
+                Unusable</span
+              >
+            </div>
+          </div>
+
+          <div class="overflow-y-auto flex-1 custom-scrollbar">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead class="sticky top-0 bg-white shadow-sm z-10">
+                <tr
+                  class="text-slate-400 text-[10px] uppercase tracking-widest"
+                >
+                  <th class="px-6 py-4 font-bold">Date & Time</th>
+                  <th class="px-6 py-4 font-bold">NH3 Level</th>
+                  <th class="px-6 py-4 font-bold">Status Assessment</th>
+                  <th class="px-6 py-4 font-bold text-right">Fan Status</th>
+                </tr>
+              </thead>
+              <tbody
+                id="dataTableBody"
+                class="divide-y divide-slate-100"
+              ></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let timelineChart, hourlyChart;
+
+      // Custom Date Formatter (e.g. "18 Jun, 02:30 PM")
+      const formatDateTime = (isoString) => {
+        return new Intl.DateTimeFormat("en-IN", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }).format(new Date(isoString));
+      };
+
+      // Strict Color Coding Logic based on User Request
+      const getStatusStyles = (val) => {
+        if (val < 30) return { text: "Excellent", cls: "status-excellent" };
+        if (val <= 40) return { text: "Average", cls: "status-average" };
+        if (val <= 60)
+          return { text: "Mediocre (Usable)", cls: "status-mediocre" };
+        return { text: "Unusable (Critical)", cls: "status-unusable" };
+      };
+
+      // Initialize ApexCharts
+      function initCharts() {
+        // 1. Timeline Chart (Area)
+        const tlOptions = {
+          series: [],
+          chart: {
+            type: "area",
+            height: 320,
+            fontFamily: "Inter",
+            animations: { enabled: false }, // Prevent freezing on large datasets
+            toolbar: { show: false },
+          },
+          colors: ["#ef4444"], // Red spikes
+          fill: {
+            type: "gradient",
+            gradient: {
+              shadeIntensity: 1,
+              opacityFrom: 0.4,
+              opacityTo: 0.0,
+              stops: [0, 100],
+            },
+          },
+          dataLabels: { enabled: false },
+          stroke: { curve: "smooth", width: 2 },
+          xaxis: {
+            type: "datetime",
+            labels: { style: { colors: "#94a3b8" }, datetimeUTC: false },
+            tooltip: { enabled: false },
+          },
+          yaxis: {
+            min: 0,
+            max: 120,
+            labels: { style: { colors: "#94a3b8", fontWeight: 600 } },
+          },
+          grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
+          annotations: {
+            // Threat zones
+            yaxes: [
+              { y: 40, y2: 60, fillColor: "#fed7aa", opacity: 0.2 },
+              { y: 60, y2: 120, fillColor: "#fecaca", opacity: 0.2 },
+            ],
+            // We will inject X-axis annotations here for Cleaner Logs
+            xaxis: [],
+          },
+          tooltip: {
+            x: { format: "dd MMM, hh:mm TT" },
+            y: { formatter: (val) => val + " ppm" },
+          },
+        };
+        timelineChart = new ApexCharts(
+          document.querySelector("#timelineChart"),
+          tlOptions,
+        );
+        timelineChart.render();
+
+        // 2. Hourly Average Chart (Bar)
+        const hrOptions = {
+          series: [{ name: "Avg Odor", data: [] }],
+          chart: {
+            type: "bar",
+            height: 320,
+            fontFamily: "Inter",
+            toolbar: { show: false },
+          },
+          plotOptions: { bar: { borderRadius: 4, columnWidth: "60%" } },
+          colors: ["#3b82f6"],
+          dataLabels: { enabled: false },
+          xaxis: {
+            categories: [], // 12AM, 1AM, 2AM...
+            labels: {
+              style: { colors: "#64748b", fontSize: "10px", fontWeight: 600 },
+            },
+          },
+          yaxis: { show: false },
+          grid: { show: false },
+          tooltip: {
+            y: { formatter: (val) => val + " ppm" },
+          },
+        };
+        hourlyChart = new ApexCharts(
+          document.querySelector("#hourlyChart"),
+          hrOptions,
+        );
+        hourlyChart.render();
+      }
+
+      // Fetch Data & Update UI
+      async function fetchDashboardData(interval) {
+        try {
+          // 1. Fetch Latest 100 List
+          const listRes = await fetch("/api/odor/latest");
+          const listData = await listRes.json();
+
+          if (listData.success && listData.data.length > 0) {
+            updateTable(listData.data);
+
+            // Update KPI 1 (Live) from the absolute newest record
+            const latest = listData.data[0];
+            document.getElementById("kpi-current").innerText = latest.nh3_value;
+            document.getElementById("kpi-time").innerText =
+              "Last update: " + formatDateTime(latest.created_at);
+          }
+
+          // 2. Fetch Analytics (Graph Data & KPIs)
+          const anRes = await fetch(`/api/odor/analytics?interval=${interval}`);
+          const anData = await anRes.json();
+
+          if (anData.success) {
+            // Update KPIs 2,3,4
+            const kpis = anData.kpis || {};
+            document.getElementById("kpi-peak").innerText =
+              kpis.peak_today || 0;
+            document.getElementById("kpi-avg").innerText = kpis.avg_today || 0;
+            document.getElementById("kpi-incidents").innerText =
+              kpis.critical_incidents || 0;
+
+            // Update Timeline Graph
+            const seriesData = anData.data.map((d) => ({
+              x: new Date(d.time_bucket).getTime(),
+              y: parseFloat(d.max_nh3),
+            }));
+            timelineChart.updateSeries([
+              { name: "Peak NH3", data: seriesData },
+            ]);
+
+            // Generate Hourly Bar Chart data (Group by hour of day 0-23)
+            processHourlyData(anData.data);
+          }
+
+          // 3. Fetch Cleaner Logs (Draw Correlations)
+          const clRes = await fetch("/api/cleaner-logs");
+          const clData = await clRes.json();
+
+          if (clData.success) {
+            drawCleanerAnnotations(clData.data);
+          }
+        } catch (e) {
+          console.error("Dashboard fetch error:", e);
+        }
+      }
+
+      function updateTable(records) {
+        const tbody = document.getElementById("dataTableBody");
+        let html = "";
+
+        records.forEach((row) => {
+          const { text, cls } = getStatusStyles(row.nh3_value);
+          const fanHtml =
+            row.fan_status === "ON"
+              ? `<span class="text-blue-600 font-bold"><i class="fa-solid fa-fan animate-spin mr-1"></i> ON</span>`
+              : `<span class="text-slate-400 font-medium">OFF</span>`;
+
+          html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-3.5 whitespace-nowrap text-slate-600 font-medium">${formatDateTime(row.created_at)}</td>
+                        <td class="px-6 py-3.5 whitespace-nowrap font-black text-slate-800 text-lg">${row.nh3_value} <span class="text-xs font-medium text-slate-400">ppm</span></td>
+                        <td class="px-6 py-3.5 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${cls}">${text}</span>
+                        </td>
+                        <td class="px-6 py-3.5 whitespace-nowrap text-right text-xs">${fanHtml}</td>
+                    </tr>
+                `;
+        });
+        tbody.innerHTML = html;
+      }
+
+      function processHourlyData(graphData) {
+        // Aggregate averages by hour of the day (0 to 23)
+        let hourSums = new Array(24).fill(0);
+        let hourCounts = new Array(24).fill(0);
+
+        graphData.forEach((d) => {
+          const hour = new Date(d.time_bucket).getHours();
+          hourSums[hour] += parseFloat(d.avg_nh3);
+          hourCounts[hour] += 1;
+        });
+
+        let hourlyAvgs = hourSums.map((sum, i) =>
+          hourCounts[i] ? Math.round(sum / hourCounts[i]) : 0,
+        );
+
+        // Format labels like "12AM", "1PM"
+        let labels = Array.from({ length: 24 }, (_, i) => {
+          const ampm = i >= 12 ? "PM" : "AM";
+          const hr = i % 12 || 12;
+          return `${hr}${ampm}`;
+        });
+
+        hourlyChart.updateOptions({ xaxis: { categories: labels } });
+        hourlyChart.updateSeries([{ name: "Avg Odor", data: hourlyAvgs }]);
+      }
+
+      function drawCleanerAnnotations(logs) {
+        // Add vertical blue lines to the timeline graph where cleaning occurred
+        const annotations = logs.map((log) => ({
+          x: new Date(log.time).getTime(),
+          strokeDashArray: 0,
+          borderColor: "#2563eb", // Primary Blue
+          label: {
+            borderColor: "#2563eb",
+            style: {
+              color: "#fff",
+              background: "#2563eb",
+              fontSize: "10px",
+              fontWeight: 600,
+              padding: { left: 6, right: 6, top: 3, bottom: 3 },
+            },
+            text: `Cleaned by ${log.cleaner}`,
+          },
+        }));
+
+        // Preserve existing Y-axis threat zones, append X-axis annotations
+        timelineChart.updateOptions({
+          annotations: {
+            yaxes: [
+              { y: 40, y2: 60, fillColor: "#fed7aa", opacity: 0.2 },
+              { y: 60, y2: 120, fillColor: "#fecaca", opacity: 0.2 },
+            ],
+            xaxis: annotations,
+          },
+        });
+      }
+
+      // UI Tab Handler
+      function changeInterval(interval, btn) {
+        document.querySelectorAll(".interval-btn").forEach((el) => {
+          el.classList.remove(
+            "active",
+            "bg-white",
+            "shadow-sm",
+            "text-blue-600",
+          );
+          el.classList.add("hover:bg-white", "hover:text-slate-800");
+        });
+        btn.classList.add("active", "bg-white", "shadow-sm", "text-blue-600");
+        btn.classList.remove("hover:bg-white", "hover:text-slate-800");
+
+        fetchDashboardData(interval);
+      }
+
+      // Initialize
+      window.addEventListener("DOMContentLoaded", () => {
+        initCharts();
+
+        // For testing purposes: Generate mock IoT data dynamically into the DB
+        setInterval(() => {
+          // Simulating an IoT POST request every 30 seconds to make the UI "Live"
+          let mockVal = Math.floor(15 + Math.random() * 70); // random 15-85
+          let status =
+            mockVal > 60
+              ? "CRITICAL"
+              : mockVal > 40
+                ? "POOR"
+                : mockVal > 30
+                  ? "MODERATE"
+                  : "EXCELLENT";
+          fetch("/api/odor", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              device_id: "RAILWAY_DEVICE_001",
+              nh3_value: mockVal,
+              status: "ACTIVE",
+              fan_status: mockVal > 60 ? "ON" : "OFF",
+              air_status: status,
+              wifi_rssi: -62,
+            }),
+          });
+        }, 30000);
+
+        // Fetch real data immediately, then poll every 10 seconds
+        fetchDashboardData("hour");
+        setInterval(
+          () =>
+            fetchDashboardData(
+              document
+                .querySelector(".interval-btn.active")
+                .textContent.includes("7")
+                ? "hour"
+                : "minute",
+            ),
+          10000,
+        );
+      });
+    </script>
+  </body>
+</html>
