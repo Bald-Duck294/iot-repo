@@ -518,11 +518,13 @@
       }
     }
 
+    const TARGET_DEVICE_ID = 'TOILET_MONITOR_01';
+
     async function pollLatest() {
       if (isPaused) return;
 
       try {
-        const res = await fetch('/api/v2/readings/latest');
+        const res = await fetch(`/api/v2/readings/latest?device_id=${TARGET_DEVICE_ID}`);
         const json = await res.json();
 
         const statusDot = document.getElementById('status-dot');
@@ -635,12 +637,12 @@
 
     async function fetchHistory() {
       try {
-        const res = await fetch('/api/v2/readings?limit=20');
+        const res = await fetch(`/api/v2/readings?device_id=${TARGET_DEVICE_ID}&limit=20`);
         const json = await res.json();
         const tbody = document.getElementById('readings-tbody');
 
         if (!json.success || !json.data || json.data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No packets recorded yet. Use the "Send Test Packet" button or start your ESP32.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No packets recorded yet for TOILET_MONITOR_01. Use the "Send Test Packet" button or start your ESP32.</td></tr>';
           return;
         }
 

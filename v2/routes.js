@@ -152,14 +152,15 @@ export function createV2Router(pool) {
     try {
       const { device_id } = req.query;
 
-      let query = `
-        SELECT * FROM odor_readings
-      `;
+      let query = `SELECT * FROM odor_readings`;
       const values = [];
 
       if (device_id) {
         query += ` WHERE device_id = $1`;
         values.push(device_id);
+      } else {
+        // Default to TOILET_MONITOR_01 and filter out legacy railway data
+        query += ` WHERE device_id = 'TOILET_MONITOR_01'`;
       }
 
       query += ` ORDER BY created_at DESC LIMIT 1;`;
@@ -170,7 +171,7 @@ export function createV2Router(pool) {
         return res.status(200).json({
           success: true,
           data: null,
-          message: "No readings recorded yet in odor_readings",
+          message: "No readings recorded yet for TOILET_MONITOR_01",
         });
       }
 
@@ -213,6 +214,8 @@ export function createV2Router(pool) {
         query += ` ORDER BY created_at DESC LIMIT $2;`;
         values.push(limit);
       } else {
+        // Default to TOILET_MONITOR_01 and exclude railway legacy data
+        query += ` WHERE device_id = 'TOILET_MONITOR_01'`;
         query += ` ORDER BY created_at DESC LIMIT $1;`;
         values.push(limit);
       }
@@ -246,6 +249,7 @@ export function createV2Router(pool) {
           MAX(created_at) as last_seen,
           ROUND(EXTRACT(EPOCH FROM (NOW() - MAX(created_at)))) as seconds_ago
         FROM odor_readings
+        WHERE device_id != 'RAILWAY_DEVICE_001'
         GROUP BY device_id
         ORDER BY last_seen DESC;
       `;
