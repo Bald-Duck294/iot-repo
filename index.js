@@ -7,8 +7,8 @@ import { createV2Router } from "./v2/routes.js";
 
 console.log("🔍 Checking environment variables...");
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
-// Grab the URL from the environment
-let dbUrl = process.env.DATABASE_URL;
+// Grab the URL from the environment (with cloud fallback if Vercel env is unset)
+let dbUrl = (process.env.DATABASE_URL || "postgresql://app_user:npg_Bu2OiV9NMXeR@34.93.127.187:5432/safai_pg").trim();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,9 +20,8 @@ if (dbUrl && dbUrl.includes("?")) {
   dbUrl = dbUrl.split("?")[0];
 }
 // Initialize the PostgreSQL connection pool
-// This automatically picks up process.env.DATABASE_URL
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false, // This fixes the UNABLE_TO_VERIFY_LEAF_SIGNATURE error
   },
