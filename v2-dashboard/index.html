@@ -363,7 +363,7 @@
 
     <div class="banner">
       <div>
-        <strong>Endpoint Live:</strong> Point ESP32 <code>SERVER_URL</code> to <code>http://&lt;IP&gt;:3000/api/v2/readings</code>
+        <strong>Endpoint Live:</strong> Point ESP32 <code>SERVER_URL</code> to <code id="endpoint-url">/api/v2/readings</code>
       </div>
       <div id="device-meta">Awaiting hardware packet...</div>
     </div>
@@ -709,6 +709,12 @@
       } catch (err) {
         showToast('❌ Network error: ' + err.message);
       }
+    }
+
+    // Display dynamic current endpoint URL
+    const endpointEl = document.getElementById('endpoint-url');
+    if (endpointEl) {
+      endpointEl.textContent = window.location.origin + '/api/v2/readings';
     }
 
     // Start auto-polling
