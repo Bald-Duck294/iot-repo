@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IoT Odour Monitor - V2 Telemetry Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #121826;
+      --card-border: #1f293d;
+      --text-main: #f1f5f9;
+      --text-muted: #8e9bb2;
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 24px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+      color: #fff;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: rgba(31, 41, 61, 0.6);
+      border: 1px solid var(--card-border);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #64748b;
+    }
+
+    .status-dot.online {
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline {
+      background-color: var(--danger);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      border: none;
+      outline: none;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: #1a2336;
+      border-color: #334155;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* Subheader banner */
+    .banner {
+      background: rgba(6, 182, 212, 0.08);
+      border: 1px solid rgba(6, 182, 212, 0.25);
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      font-size: 0.88rem;
+      color: #93c5fd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .banner code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 3px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+    }
+
+    /* Metrics Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .card-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .badge-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .badge-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .badge-alarm { background: rgba(239, 68, 68, 0.25); color: #f87171; animation: pulse 1s infinite; }
+    .badge-idle { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+    .badge-active { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+    .metric-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-unit {
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .card-footer {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Table Section */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #0d131f;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(31, 41, 61, 0.5);
+      color: var(--text-main);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .signal-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 12px;
+    }
+
+    .bar {
+      width: 3px;
+      background: #334155;
+      border-radius: 1px;
+    }
+
+    .bar.lit {
+      background: var(--accent-cyan);
+    }
+
+    /* Empty state */
+    .empty-state {
+      padding: 48px 16px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      background: #1e293b;
+      color: white;
+      font-size: 0.85rem;
+      border: 1px solid var(--accent-cyan);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="brand">
+        <span class="logo-badge">V2 LIVE</span>
+        <div>
+          <h1>IoT Odour Telemetry Monitor</h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Real-time Hardware Ingestion & Status Inspector</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="status-pill">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text">CONNECTING...</span>
+        </div>
+        <button class="btn-secondary" id="btn-pause" onclick="togglePause()">Pause Feed</button>
+        <button class="btn-primary" onclick="sendTestPacket()">Send Test Packet</button>
+      </div>
+    </header>
+
+    <div class="banner">
+      <div>
+        <strong>Endpoint Live:</strong> Point ESP32 <code>SERVER_URL</code> to <code>http://&lt;IP&gt;:3000/api/v2/readings</code>
+      </div>
+      <div id="device-meta">Awaiting hardware packet...</div>
+    </div>
+
+    <!-- Live Telemetry Cards -->
+    <div class="grid">
+      <!-- NH3 Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">Ammonia (NH3) Raw</span>
+          <span class="badge badge-idle" id="nh3-badge">IDLE</span>
+        </div>
+        <div class="metric-value">
+          <span id="nh3-val">--</span>
+          <span class="metric-unit">/ 4095 ADC</span>
+        </div>
+        <div class="card-footer" id="nh3-footer">MQ-137 Pin 34</div>
+      </div>
+
+      <!-- H2S Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">Hydrogen Sulfide (H2S) Raw</span>
+          <span class="badge badge-idle" id="h2s-badge">IDLE</span>
+        </div>
+        <div class="metric-value">
+          <span id="h2s-val">--</span>
+          <span class="metric-unit">/ 4095 ADC</span>
+        </div>
+        <div class="card-footer" id="h2s-footer">MQ-136 Pin 35</div>
+      </div>
+
+      <!-- Climate DHT Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">Climate (DHT22)</span>
+          <span class="badge badge-ok" id="climate-badge">ONLINE</span>
+        </div>
+        <div class="metric-value">
+          <span id="temp-val">--</span><span class="metric-unit">°C</span>
+          <span style="font-size: 1.2rem; color: var(--text-muted); margin: 0 4px;">|</span>
+          <span id="hum-val">--</span><span class="metric-unit">%</span>
+        </div>
+        <div class="card-footer" id="climate-footer">Pin 4</div>
+      </div>
+
+      <!-- PIR Motion Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">PIR Occupancy</span>
+          <span class="badge badge-idle" id="pir-badge">NO MOTION</span>
+        </div>
+        <div class="metric-value" id="pir-status-text" style="font-size: 1.4rem;">
+          STANDBY
+        </div>
+        <div class="card-footer">Pin 27 (Window Latched)</div>
+      </div>
+
+      <!-- Fan Relay Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">Exhaust Fan Relay</span>
+          <span class="badge badge-idle" id="fan-badge">OFF</span>
+        </div>
+        <div class="metric-value" id="fan-status-text" style="font-size: 1.4rem;">
+          IDLE
+        </div>
+        <div class="card-footer">Relay Pin 23</div>
+      </div>
+
+      <!-- WiFi RSSI Card -->
+      <div class="card">
+        <div class="card-top">
+          <span class="card-label">WiFi Connection</span>
+          <div class="signal-bars" id="signal-bars">
+            <span class="bar" style="height: 3px;"></span>
+            <span class="bar" style="height: 6px;"></span>
+            <span class="bar" style="height: 9px;"></span>
+            <span class="bar" style="height: 12px;"></span>
+          </div>
+        </div>
+        <div class="metric-value">
+          <span id="rssi-val">--</span>
+          <span class="metric-unit">dBm</span>
+        </div>
+        <div class="card-footer" id="rssi-footer">ESP32 Station Mode</div>
+      </div>
+    </div>
+
+    <!-- History Log Table -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>Incoming Telemetry Stream</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Auto-refreshing every 3s)</span>
+      </div>
+      <div>
+        <button class="btn-secondary" onclick="fetchHistory()" style="font-size: 0.75rem; padding: 5px 10px;">Refresh Table</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Device ID</th>
+            <th>NH3 Raw</th>
+            <th>H2S Raw</th>
+            <th>Temp</th>
+            <th>Humidity</th>
+            <th>PIR</th>
+            <th>Fan</th>
+            <th>Status Badges</th>
+            <th>WiFi RSSI</th>
+          </tr>
+        </thead>
+        <tbody id="readings-tbody">
+          <tr>
+            <td colspan="10" class="empty-state">Loading telemetry logs...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="toast">Reading Saved</div>
+
+  <script>
+    let isPaused = false;
+    let pollInterval = null;
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      const btn = document.getElementById('btn-pause');
+      if (isPaused) {
+        btn.textContent = 'Resume Feed';
+        btn.style.borderColor = 'var(--warning)';
+        btn.style.color = 'var(--warning)';
+      } else {
+        btn.textContent = 'Pause Feed';
+        btn.style.borderColor = 'var(--card-border)';
+        btn.style.color = 'var(--text-main)';
+        pollLatest();
+        fetchHistory();
+      }
+    }
+
+    async function pollLatest() {
+      if (isPaused) return;
+
+      try {
+        const res = await fetch('/api/v2/readings/latest');
+        const json = await res.json();
+
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const deviceMeta = document.getElementById('device-meta');
+
+        if (!json.success || !json.data) {
+          statusDot.className = 'status-dot offline';
+          statusText.textContent = 'NO DATA';
+          deviceMeta.textContent = 'No readings in odor_readings table yet.';
+          return;
+        }
+
+        const d = json.data;
+        const isOnline = d.is_online;
+
+        statusDot.className = isOnline ? 'status-dot online' : 'status-dot offline';
+        statusText.textContent = isOnline ? 'ONLINE' : `OFFLINE (${d.seconds_since_last_seen}s ago)`;
+        deviceMeta.innerHTML = `Device: <strong>${d.device_id}</strong> | Last Seen: <strong>${d.seconds_since_last_seen}s ago</strong> (${new Date(d.created_at).toLocaleTimeString()})`;
+
+        // NH3
+        document.getElementById('nh3-val').textContent = d.nh3_raw;
+        const nh3Badge = document.getElementById('nh3-badge');
+        if (d.nh3_alarm) {
+          nh3Badge.className = 'badge badge-alarm';
+          nh3Badge.textContent = 'ALARM';
+        } else if (d.nh3_warning) {
+          nh3Badge.className = 'badge badge-warn';
+          nh3Badge.textContent = 'WARNING';
+        } else {
+          nh3Badge.className = 'badge badge-ok';
+          nh3Badge.textContent = 'NORMAL';
+        }
+
+        // H2S
+        document.getElementById('h2s-val').textContent = d.h2s_raw;
+        const h2sBadge = document.getElementById('h2s-badge');
+        if (d.h2s_alarm) {
+          h2sBadge.className = 'badge badge-alarm';
+          h2sBadge.textContent = 'ALARM';
+        } else if (d.h2s_warning) {
+          h2sBadge.className = 'badge badge-warn';
+          h2sBadge.textContent = 'WARNING';
+        } else {
+          h2sBadge.className = 'badge badge-ok';
+          h2sBadge.textContent = 'NORMAL';
+        }
+
+        // Climate
+        document.getElementById('temp-val').textContent = d.temperature !== null ? d.temperature : '--';
+        document.getElementById('hum-val').textContent = d.humidity !== null ? d.humidity : '--';
+        const climateBadge = document.getElementById('climate-badge');
+        if (d.temperature === null || d.humidity === null) {
+          climateBadge.className = 'badge badge-warn';
+          climateBadge.textContent = 'DHT ERROR';
+        } else {
+          climateBadge.className = 'badge badge-ok';
+          climateBadge.textContent = 'ONLINE';
+        }
+
+        // PIR
+        const pirBadge = document.getElementById('pir-badge');
+        const pirText = document.getElementById('pir-status-text');
+        if (d.pir_detected) {
+          pirBadge.className = 'badge badge-warn';
+          pirBadge.textContent = 'ACTIVE';
+          pirText.textContent = 'MOTION DETECTED';
+          pirText.style.color = 'var(--warning)';
+        } else {
+          pirBadge.className = 'badge badge-idle';
+          pirBadge.textContent = 'CLEAR';
+          pirText.textContent = 'NO MOTION';
+          pirText.style.color = 'var(--text-muted)';
+        }
+
+        // Fan
+        const fanBadge = document.getElementById('fan-badge');
+        const fanText = document.getElementById('fan-status-text');
+        if (d.fan_running) {
+          fanBadge.className = 'badge badge-active';
+          fanBadge.textContent = 'ON';
+          fanText.textContent = 'VENTILATING';
+          fanText.style.color = 'var(--accent-cyan)';
+        } else {
+          fanBadge.className = 'badge badge-idle';
+          fanBadge.textContent = 'OFF';
+          fanText.textContent = 'IDLE';
+          fanText.style.color = 'var(--text-muted)';
+        }
+
+        // WiFi RSSI
+        const rssi = d.wifi_rssi;
+        document.getElementById('rssi-val').textContent = rssi !== null ? rssi : '--';
+        updateSignalBars(rssi);
+
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }
+
+    function updateSignalBars(rssi) {
+      const bars = document.querySelectorAll('#signal-bars .bar');
+      bars.forEach(b => b.classList.remove('lit'));
+      if (rssi === null) return;
+      if (rssi >= -85) bars[0].classList.add('lit');
+      if (rssi >= -75) bars[1].classList.add('lit');
+      if (rssi >= -65) bars[2].classList.add('lit');
+      if (rssi >= -55) bars[3].classList.add('lit');
+    }
+
+    async function fetchHistory() {
+      try {
+        const res = await fetch('/api/v2/readings?limit=20');
+        const json = await res.json();
+        const tbody = document.getElementById('readings-tbody');
+
+        if (!json.success || !json.data || json.data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No packets recorded yet. Use the "Send Test Packet" button or start your ESP32.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = json.data.map(row => {
+          const time = new Date(row.created_at).toLocaleTimeString();
+          let badges = [];
+          if (row.nh3_alarm) badges.push('<span class="badge badge-alarm">NH3 ALARM</span>');
+          else if (row.nh3_warning) badges.push('<span class="badge badge-warn">NH3 WARN</span>');
+
+          if (row.h2s_alarm) badges.push('<span class="badge badge-alarm">H2S ALARM</span>');
+          else if (row.h2s_warning) badges.push('<span class="badge badge-warn">H2S WARN</span>');
+
+          if (badges.length === 0) badges.push('<span class="badge badge-ok">NORMAL</span>');
+
+          return `
+            <tr>
+              <td>${time}</td>
+              <td style="color: #60a5fa; font-weight: 600;">${row.device_id}</td>
+              <td>${row.nh3_raw}</td>
+              <td>${row.h2s_raw}</td>
+              <td>${row.temperature !== null ? row.temperature + '°C' : '<span style="color:red">null</span>'}</td>
+              <td>${row.humidity !== null ? row.humidity + '%' : '<span style="color:red">null</span>'}</td>
+              <td>${row.pir_detected ? '<span style="color:#f59e0b;font-weight:700">DETECTED</span>' : '<span style="color:#64748b">CLEAR</span>'}</td>
+              <td>${row.fan_running ? '<span style="color:#06b6d4;font-weight:700">RUNNING</span>' : '<span style="color:#64748b">OFF</span>'}</td>
+              <td>${badges.join(' ')}</td>
+              <td>${row.wifi_rssi !== null ? row.wifi_rssi + ' dBm' : '--'}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error('History fetch error:', err);
+      }
+    }
+
+    async function sendTestPacket() {
+      const sample = {
+        device_id: "TOILET_MONITOR_01",
+        nh3_raw: Math.floor(1200 + Math.random() * 400),
+        h2s_raw: Math.floor(800 + Math.random() * 300),
+        temperature: +(27 + Math.random() * 4).toFixed(2),
+        humidity: +(60 + Math.random() * 15).toFixed(2),
+        pir_detected: Math.random() > 0.5,
+        nh3_warning: false,
+        h2s_warning: false,
+        nh3_alarm: false,
+        h2s_alarm: false,
+        fan_running: false,
+        wifi_rssi: -(Math.floor(55 + Math.random() * 15))
+      };
+
+      try {
+        const res = await fetch('/api/v2/readings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sample)
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast('✅ Test Packet Ingested Successfully!');
+          pollLatest();
+          fetchHistory();
+        } else {
+          showToast('❌ Error: ' + json.error);
+        }
+      } catch (err) {
+        showToast('❌ Network error: ' + err.message);
+      }
+    }
+
+    // Start auto-polling
+    pollLatest();
+    fetchHistory();
+    pollInterval = setInterval(() => {
+      pollLatest();
+      fetchHistory();
+    }, 3000);
+  </script>
+</body>
+</html>

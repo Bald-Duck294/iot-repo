@@ -3,6 +3,7 @@ import pg from "pg";
 import "dotenv/config";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createV2Router } from "./v2/routes.js";
 
 console.log("🔍 Checking environment variables...");
 console.log("DATABASE_URL:", process.env.DATABASE_URL);
@@ -28,6 +29,12 @@ const pool = new Pool({
 });
 // Middleware to parse incoming JSON data
 app.use(express.json());
+
+// ==========================================
+// V2 Isolated Routes & Dashboard (Zero Touch on V1)
+// ==========================================
+app.use("/api/v2", createV2Router(pool));
+app.use("/v2", express.static(path.join(__dirname, "v2-dashboard")));
 
 // ==========================================
 // POST: Receive Data from IoT Device
